@@ -9,7 +9,7 @@ public class Goal : MonoBehaviour
         {
             Debug.Log("You Win!");
             // TODO: Later load Win Screen scene
-            \
+            // SceneManager.LoadScene("WinScene");
         }
     }
 }
