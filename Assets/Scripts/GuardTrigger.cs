@@ -6,7 +6,7 @@ public class GuardTrigger : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Game Over!");
+            Debug.Log("You have been caught!");
         }
     }
 }

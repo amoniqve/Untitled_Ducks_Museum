@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 2303382343059065092}
   - component: {fileID: 2149243139213663309}
   - component: {fileID: 6702621054687552923}
-  - component: {fileID: 6110831019783799375}
   m_Layer: 0
   m_Name: Guard
   m_TagString: Untagged
@@ -145,15 +144,5 @@ MonoBehaviour:
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
---- !u!114 &6110831019783799375
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8961631004796158613}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb1cf066a12a554439b7098db5df5b08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  detectionRange: 5
