@@ -6,7 +6,7 @@ public class MainMenuManager : MonoBehaviour
     
     public void PlayGame()
     {
-        SceneManager.LoadScene("MuseumGame"); 
+        SceneManager.LoadScene("GameScene"); 
     }
 
     

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GuardTrigger : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class GuardTrigger : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("You have been caught!");
+            SceneManager.LoadScene("LoseScene");
         }
     }
 }

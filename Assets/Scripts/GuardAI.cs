@@ -21,10 +21,19 @@ public class GuardAI : MonoBehaviour
     public float viewAngle = 90f;           // guard's field of view
     public LayerMask obstacleMask;          // walls/objects that block vision
 
+    [Header("Ghost Hover Animation")]
+    public float hoverHeight = 0.5f;   // base height above ground
+    public float bobSpeed = 2f;        // speed of up/down motion
+    public float bobAmount = 0.3f;     // vertical amplitude
+    private float startY;              // initial Y position
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
-        agent.destination = patrolPoints[currentPoint].position;
+        if (patrolPoints.Length > 0)
+            agent.destination = patrolPoints[currentPoint].position;
+
+        startY = transform.position.y;
     }
 
     void Update()
@@ -38,9 +47,13 @@ public class GuardAI : MonoBehaviour
         {
             ChasePlayer();
         }
+
+        // Ghost animation
+        Vector3 pos = transform.position;
+        pos.y = startY + hoverHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
+        transform.position = pos;
     }
 
-    
     void Patrol()
     {
         if (!agent.pathPending && agent.remainingDistance < 0.5f)
@@ -50,12 +63,10 @@ public class GuardAI : MonoBehaviour
         }
     }
 
-    
     void DetectPlayer()
     {
         if (player == null) return;
 
-        
         if (CanSeePlayer())
         {
             isChasing = true;
@@ -63,7 +74,6 @@ public class GuardAI : MonoBehaviour
             return;
         }
 
-        
         Vector3 guardPos = new Vector3(transform.position.x, 0, transform.position.z);
         Vector3 playerPos = new Vector3(player.position.x, 0, player.position.z);
         float distance = Vector3.Distance(guardPos, playerPos);
@@ -75,7 +85,6 @@ public class GuardAI : MonoBehaviour
         }
     }
 
-    // chasiiiing
     void ChasePlayer()
     {
         if (player == null) return;
@@ -98,11 +107,9 @@ public class GuardAI : MonoBehaviour
         if (distance < caughtDistance)
         {
             Debug.Log("Caught by guard!");
-            
         }
     }
 
-    // vision
     bool CanSeePlayer()
     {
         if (player == null) return false;
@@ -110,15 +117,12 @@ public class GuardAI : MonoBehaviour
         Vector3 directionToPlayer = (player.position - transform.position).normalized;
         directionToPlayer.y = 0; 
 
-        
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance > viewDistance) return false;
 
-        
         float angle = Vector3.Angle(transform.forward, directionToPlayer);
         if (angle > viewAngle / 2) return false;
 
-        
         if (Physics.Raycast(transform.position, directionToPlayer, out RaycastHit hit, viewDistance, obstacleMask))
         {
             if (hit.transform != player) return false; 
@@ -126,19 +130,18 @@ public class GuardAI : MonoBehaviour
 
         return true; 
     }
+
     void OnDrawGizmosSelected()
-{
-    // Draw vision distance
-    Gizmos.color = Color.yellow;
-    Gizmos.DrawWireSphere(transform.position, viewDistance);
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, viewDistance);
 
-    // Draw vision cone lines
-    Vector3 forward = transform.forward * viewDistance;
-    Vector3 leftBoundary = Quaternion.Euler(0, -viewAngle / 2, 0) * forward;
-    Vector3 rightBoundary = Quaternion.Euler(0, viewAngle / 2, 0) * forward;
+        Vector3 forward = transform.forward * viewDistance;
+        Vector3 leftBoundary = Quaternion.Euler(0, -viewAngle / 2, 0) * forward;
+        Vector3 rightBoundary = Quaternion.Euler(0, viewAngle / 2, 0) * forward;
 
-    Gizmos.color = Color.red;
-    Gizmos.DrawLine(transform.position, transform.position + leftBoundary);
-    Gizmos.DrawLine(transform.position, transform.position + rightBoundary);
-}
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + leftBoundary);
+        Gizmos.DrawLine(transform.position, transform.position + rightBoundary);
+    }
 }
