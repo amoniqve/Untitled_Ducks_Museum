@@ -18,14 +18,17 @@ public class GuardAI : MonoBehaviour
     [Header("Vision Cone Settings")]
     public float viewDistance = 5f;         // how far the guard can see
     [Range(0, 360)]
-    public float viewAngle = 90f;           // guard's field of view
-    public LayerMask obstacleMask;          // walls/objects that block vision
+    public float viewAngle = 90f;         
+    public LayerMask obstacleMask;          
 
     [Header("Ghost Hover Animation")]
-    public float hoverHeight = 0.5f;   // base height above ground
-    public float bobSpeed = 2f;        // speed of up/down motion
-    public float bobAmount = 0.3f;     // vertical amplitude
-    private float startY;              // initial Y position
+    public float hoverHeight = 0.5f;   
+    public float bobSpeed = 2f;        
+    public float bobAmount = 0.3f;     
+    private float startY;              
+
+    [Header("Safe Zone Settings")]
+    public string safeZoneTag = "SafeZone";  // Tag for safe zone areas
 
     void Start()
     {
@@ -48,7 +51,7 @@ public class GuardAI : MonoBehaviour
             ChasePlayer();
         }
 
-        // Ghost animation
+        // Ghost animation 
         Vector3 pos = transform.position;
         pos.y = startY + hoverHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
         transform.position = pos;
@@ -66,6 +69,13 @@ public class GuardAI : MonoBehaviour
     void DetectPlayer()
     {
         if (player == null) return;
+
+        // Ignore player if in safe zone B)
+        if (IsPlayerInSafeZone())
+        {
+            isChasing = false;
+            return;
+        }
 
         if (CanSeePlayer())
         {
@@ -88,6 +98,14 @@ public class GuardAI : MonoBehaviour
     void ChasePlayer()
     {
         if (player == null) return;
+
+        // Stop chasing if player enters safe zone hehe
+        if (IsPlayerInSafeZone())
+        {
+            isChasing = false;
+            agent.destination = patrolPoints[currentPoint].position;
+            return;
+        }
 
         agent.destination = player.position;
 
@@ -129,6 +147,22 @@ public class GuardAI : MonoBehaviour
         }
 
         return true; 
+    }
+
+    //  safe zone
+    bool IsPlayerInSafeZone()
+    {
+        if (player == null) return false;
+
+        Collider[] hitColliders = Physics.OverlapSphere(player.position, 0.1f);
+        foreach (var col in hitColliders)
+        {
+            if (col.CompareTag(safeZoneTag))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void OnDrawGizmosSelected()
