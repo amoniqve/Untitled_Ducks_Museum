@@ -1,39 +1,31 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.Linq;
 
 public class LoseSceneManager : MonoBehaviour
 {
-    public Button defaultButton; 
-
-    void Start()
+    private void Start()
     {
-        
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
+        Button[] buttons = GetComponentsInChildren<Button>(true);
 
-        
-        Time.timeScale = 1f;
+        Button retry = buttons.FirstOrDefault(b => b.name == "RetryButton");
+        Button menu  = buttons.FirstOrDefault(b => b.name == "MainMenuButton");
 
-        if (EventSystem.current == null)
-        {
-            GameObject es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-        }
-
-        if (defaultButton != null)
-        {
-            EventSystem.current.SetSelectedGameObject(defaultButton.gameObject);
-        }
+        if (retry != null) retry.onClick.AddListener(Replay);
+        if (menu != null)  menu.onClick.AddListener(GoToMainMenu);
     }
 
+    /// <summary>Restarts the game via UIManager.</summary>
     public void Replay()
     {
-        SceneManager.LoadScene("GameScene");
+        if (UIManager.Instance != null)
+            UIManager.Instance.RestartGame();
     }
 
+    /// <summary>Returns to the main menu via UIManager.</summary>
     public void GoToMainMenu()
     {
-        SceneManager.LoadScene("MainMenu");
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowMainMenu();
     }
 }

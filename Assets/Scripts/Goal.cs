@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class Goal : MonoBehaviour
@@ -16,6 +15,7 @@ public class Goal : MonoBehaviour
     IEnumerator WinDelay()
     {
         yield return new WaitForSeconds(1f);
-		SceneManager.LoadScene("WinScene");
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowWinScreen();
     }
 }
