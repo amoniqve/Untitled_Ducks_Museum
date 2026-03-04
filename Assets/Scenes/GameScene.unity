@@ -20,9 +20,9 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.014796184, g: 0.044935405, b: 0.16509432, a: 1}
-  m_AmbientEquatorColor: {r: 0.008566216, g: 0.025225284, b: 0.051886797, a: 1}
-  m_AmbientGroundColor: {r: 0.03839983, g: 0.010145954, b: 0.11320752, a: 1}
+  m_AmbientSkyColor: {r: 0.25943398, g: 0.14302896, b: 0.13705947, a: 1}
+  m_AmbientEquatorColor: {r: 0.15327962, g: 0.21907642, b: 0.3915094, a: 1}
+  m_AmbientGroundColor: {r: 0.0072089736, g: 0.0077523715, b: 0.05660379, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
@@ -8081,6 +8081,10 @@ PrefabInstance:
       propertyPath: m_IsKinematic
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4591243235178339088, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4917763774978548658, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -8129,13 +8133,23 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 5916018606661294620, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: m_RenderingPath
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4917763774978548658, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 539712255}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4591243235178339088, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1281710639}
+    - targetCorrespondingSourceObject: {fileID: 4591243235178339088, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1281710638}
   m_SourcePrefab: {fileID: 100100000, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
 --- !u!4 &665550177 stripped
 Transform:
@@ -16468,6 +16482,93 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.023617111, y: 0.023617111, z: 0.022161331}
   m_Center: {x: 0.0000000023283058, y: -0.0000000019035793, z: 0.000110503315}
+--- !u!1 &1281710633 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4591243235178339088, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+  m_PrefabInstance: {fileID: 662601698}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1281710634 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8780594878998436460, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+  m_PrefabInstance: {fileID: 662601698}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1281710638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281710633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b9a305e18de0c04dbd257a21cd47087, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sharedProfile: {fileID: 11400000, guid: 81a8ea484cc52ca4db69062f4ce90a3e, type: 2}
+  isGlobal: 1
+  blendDistance: 0
+  weight: 1
+  priority: 0
+--- !u!114 &1281710639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281710633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948f4100a11a5c24981795d21301da5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  volumeTrigger: {fileID: 1281710634}
+  volumeLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  stopNaNPropagation: 1
+  finalBlitToCameraTarget: 0
+  antialiasingMode: 2
+  temporalAntialiasing:
+    jitterSpread: 0.75
+    sharpness: 0.25
+    stationaryBlending: 0.95
+    motionBlending: 0.85
+  subpixelMorphologicalAntialiasing:
+    quality: 2
+  fastApproximateAntialiasing:
+    fastMode: 0
+    keepAlpha: 0
+  fog:
+    enabled: 1
+    excludeSkybox: 1
+  debugLayer:
+    lightMeter:
+      width: 512
+      height: 256
+      showCurves: 1
+    histogram:
+      width: 512
+      height: 256
+      channel: 3
+    waveform:
+      exposure: 0.12
+      height: 256
+    vectorscope:
+      size: 256
+      exposure: 0.12
+    overlaySettings:
+      linearDepth: 0
+      motionColorIntensity: 4
+      motionGridSize: 64
+      colorBlindnessType: 0
+      colorBlindnessStrength: 1
+  m_Resources: {fileID: 11400000, guid: d82512f9c8e5d4a4d938b575d47f88d4, type: 2}
+  m_ShowToolkit: 0
+  m_ShowCustomSorter: 0
+  breakBeforeColorGrading: 0
+  m_BeforeTransparentBundles: []
+  m_BeforeStackBundles: []
+  m_AfterStackBundles: []
 --- !u!1001 &1282566123
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20887,7 +20988,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.8962264, g: 0.14796188, b: 0.14796188, a: 1}
-  m_Intensity: 1.25
+  m_Intensity: 1.65
   m_Range: 0.29
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -21405,7 +21506,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.8962264, g: 0.14796188, b: 0.14796188, a: 1}
-  m_Intensity: 1.25
+  m_Intensity: 1.65
   m_Range: 0.29
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
