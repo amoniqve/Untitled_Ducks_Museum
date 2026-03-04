@@ -1,20 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
 
 public class MainMenuManager : MonoBehaviour
 {
+    [Header("Button References")]
+    public Button playButton;
+    public Button controlsButton;
+    public Button quitButton;
+
     private void Start()
     {
-        Button[] buttons = GetComponentsInChildren<Button>(true);
+        if (playButton != null)
+            playButton.onClick.AddListener(PlayGame);
 
-        Button play     = buttons.FirstOrDefault(b => b.name == "PlayButton");
-        Button controls = buttons.FirstOrDefault(b => b.name == "OptionsButton");
-        Button quit     = buttons.FirstOrDefault(b => b.name == "QuitButton");
+        if (controlsButton != null)
+            controlsButton.onClick.AddListener(ShowControls);
 
-        if (play != null)     play.onClick.AddListener(PlayGame);
-        if (controls != null) controls.onClick.AddListener(ShowControls);
-        if (quit != null)     quit.onClick.AddListener(QuitGame);
+        if (quitButton != null)
+            quitButton.onClick.AddListener(QuitGame);
     }
 
     /// <summary>Starts the game by switching to the HUD via UIManager.</summary>

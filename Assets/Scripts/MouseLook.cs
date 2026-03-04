@@ -9,7 +9,7 @@ public class MouseLook : MonoBehaviour
 
     void Start()
     {
-        // Cursor is managed by UIManager
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     void Update()

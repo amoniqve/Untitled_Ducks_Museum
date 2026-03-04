@@ -1,18 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
 
 public class WinSceneManager : MonoBehaviour
 {
+    [Header("Button References")]
+    public Button defaultButton;
+    public Button mainMenuButton;
+
     private void Start()
     {
-        Button[] buttons = GetComponentsInChildren<Button>(true);
+        if (defaultButton != null)
+            defaultButton.onClick.AddListener(Replay);
 
-        Button replay = buttons.FirstOrDefault(b => b.name == "PlayAgainButton");
-        Button menu   = buttons.FirstOrDefault(b => b.name == "MainMenuButton");
-
-        if (replay != null) replay.onClick.AddListener(Replay);
-        if (menu != null)   menu.onClick.AddListener(GoToMainMenu);
+        if (mainMenuButton != null)
+            mainMenuButton.onClick.AddListener(GoToMainMenu);
     }
 
     /// <summary>Restarts the game via UIManager.</summary>
