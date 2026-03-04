@@ -1,26 +1,21 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class PauseMenuManager : MonoBehaviour
 {
-    [Header("Button References")]
-    public Button resumeButton;
-    public Button restartButton;
-    public Button controlsButton;
-    public Button mainMenuButton;
-
     private void Start()
     {
-        if (resumeButton != null)
-            resumeButton.onClick.AddListener(() => UIManager.Instance.TogglePause());
+        Button[] buttons = GetComponentsInChildren<Button>(true);
 
-        if (restartButton != null)
-            restartButton.onClick.AddListener(() => UIManager.Instance.RestartGame());
+        Button resume   = buttons.FirstOrDefault(b => b.name == "ResumeButton");
+        Button restart  = buttons.FirstOrDefault(b => b.name == "RestartButton");
+        Button controls = buttons.FirstOrDefault(b => b.name == "ControlsButton");
+        Button menu     = buttons.FirstOrDefault(b => b.name == "MainMenuButton");
 
-        if (controlsButton != null)
-            controlsButton.onClick.AddListener(() => UIManager.Instance.ShowControlsScreen());
-
-        if (mainMenuButton != null)
-            mainMenuButton.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
+        if (resume != null)   resume.onClick.AddListener(() => UIManager.Instance.TogglePause());
+        if (restart != null)  restart.onClick.AddListener(() => UIManager.Instance.RestartGame());
+        if (controls != null) controls.onClick.AddListener(() => UIManager.Instance.ShowControlsScreen());
+        if (menu != null)     menu.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
     }
 }

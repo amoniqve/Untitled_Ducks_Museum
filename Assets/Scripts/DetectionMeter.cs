@@ -62,7 +62,10 @@ public class DetectionMeter : MonoBehaviour
         if (shouldAlert)
         {
             alertIcon.enabled = true;
-            alertIcon.color = detectionLevel >= 1f ? alertColor : partialColor;
+
+            // Red as soon as threshold is crossed, brighter red at full detection
+            float redIntensity = Mathf.Clamp01((detectionLevel - detectionThreshold) / (1f - detectionThreshold));
+            alertIcon.color = Color.Lerp(new Color(0.8f, 0.1f, 0.1f, 1f), new Color(1f, 0f, 0f, 1f), redIntensity);
 
             pulseTimer += Time.deltaTime * 3f;
             float pulse = Mathf.Lerp(0.7f, 1f, (Mathf.Sin(pulseTimer) + 1f) * 0.5f);

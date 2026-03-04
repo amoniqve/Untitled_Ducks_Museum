@@ -1,19 +1,18 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class LoseSceneManager : MonoBehaviour
 {
-    [Header("Button References")]
-    public Button defaultButton;
-    public Button mainMenuButton;
-
     private void Start()
     {
-        if (defaultButton != null)
-            defaultButton.onClick.AddListener(Replay);
+        Button[] buttons = GetComponentsInChildren<Button>(true);
 
-        if (mainMenuButton != null)
-            mainMenuButton.onClick.AddListener(GoToMainMenu);
+        Button retry = buttons.FirstOrDefault(b => b.name == "RetryButton");
+        Button menu  = buttons.FirstOrDefault(b => b.name == "MainMenuButton");
+
+        if (retry != null) retry.onClick.AddListener(Replay);
+        if (menu != null)  menu.onClick.AddListener(GoToMainMenu);
     }
 
     /// <summary>Restarts the game via UIManager.</summary>

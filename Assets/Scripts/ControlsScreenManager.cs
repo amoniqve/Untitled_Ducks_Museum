@@ -1,14 +1,15 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class ControlsScreenManager : MonoBehaviour
 {
-    [Header("Button References")]
-    public Button backButton;
-
     private void Start()
     {
-        if (backButton != null)
-            backButton.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
+        Button[] buttons = GetComponentsInChildren<Button>(true);
+        Button back = buttons.FirstOrDefault(b => b.name == "BackButton");
+
+        if (back != null)
+            back.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
     }
 }

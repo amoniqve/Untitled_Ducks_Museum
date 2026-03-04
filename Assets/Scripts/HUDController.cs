@@ -3,6 +3,8 @@ using TMPro;
 
 public class HUDController : MonoBehaviour
 {
+    public static HUDController Instance { get; private set; }
+
     [Header("References")]
     public DetectionMeter detectionMeter;
     public TextMeshProUGUI objectiveText;
@@ -24,24 +26,42 @@ public class HUDController : MonoBehaviour
     private CanvasGroup objectiveCanvasGroup;
     private bool isSprinting = false;
 
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     private void Start()
     {
+        // Auto-find staminaFill so no Inspector wiring is ever needed
+        if (staminaFill == null)
+        {
+            Transform found = transform.Find("StaminaPanel/BarBackground/BarFill");
+            if (found != null)
+                staminaFill = found.GetComponent<RectTransform>();
+        }
+
+        // Initialize bar to full width using stretch anchors
+        if (staminaFill != null)
+        {
+            staminaFill.anchorMin        = new Vector2(0f, staminaFill.anchorMin.y);
+            staminaFill.anchorMax        = new Vector2(1f, staminaFill.anchorMax.y);
+            staminaFill.sizeDelta        = new Vector2(0f, staminaFill.sizeDelta.y);
+            staminaFill.anchoredPosition = Vector2.zero;
+        }
+
         if (objectiveText != null)
         {
             objectiveCanvasGroup = objectiveText.GetComponentInParent<CanvasGroup>();
             if (objectiveCanvasGroup == null)
-            {
                 objectiveCanvasGroup = objectiveText.gameObject.AddComponent<CanvasGroup>();
-            }
             objectiveCanvasGroup.alpha = 0f;
             objectiveText.text = currentObjective;
             objectiveTimer = 0f;
         }
 
         if (interactionPrompt != null)
-        {
             interactionPrompt.gameObject.SetActive(false);
-        }
 
         currentStamina = maxStamina;
     }
