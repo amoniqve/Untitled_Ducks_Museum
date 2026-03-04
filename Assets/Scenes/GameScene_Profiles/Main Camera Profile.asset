@@ -182,13 +182,13 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 0.72
+    value: 1
   size:
     overrideState: 1
-    value: 1
+    value: 0.88
   lumContrib:
     overrideState: 1
-    value: 0.8
+    value: 1
 --- !u!114 &9144624198548057732
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -254,7 +254,7 @@ MonoBehaviour:
     value: 0
   saturation:
     overrideState: 1
-    value: -10
+    value: 51
   brightness:
     overrideState: 0
     value: 0
@@ -263,7 +263,7 @@ MonoBehaviour:
     value: 0.2
   contrast:
     overrideState: 1
-    value: 2.5
+    value: 37
   mixerRedOutRedIn:
     overrideState: 0
     value: 100

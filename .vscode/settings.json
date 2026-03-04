@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "UD_Museum.sln"
+    "dotnet.defaultSolution": "Untitled_Ducks_Museum.sln"
 }
