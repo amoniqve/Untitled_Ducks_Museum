@@ -16,6 +16,6 @@ public class Goal : MonoBehaviour
     IEnumerator WinDelay()
     {
         yield return new WaitForSeconds(1f);
-        SceneManager.LoadScene("WinScene");
+		SceneManager.LoadScene("WinScene");
     }
 }
