@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class Goal : MonoBehaviour
 {
@@ -8,8 +8,14 @@ public class Goal : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("You Win!");
-            // TODO: Later load Win Screen scene
-            // SceneManager.LoadScene("WinScene");
+            StartCoroutine(WinDelay());
         }
+    }
+
+    IEnumerator WinDelay()
+    {
+        yield return new WaitForSeconds(1f);
+        if (UIManager.Instance != null)
+            UIManager.Instance.ShowWinScreen();
     }
 }

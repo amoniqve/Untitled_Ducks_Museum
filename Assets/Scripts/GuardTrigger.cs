@@ -7,6 +7,8 @@ public class GuardTrigger : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             Debug.Log("You have been caught!");
+            if (UIManager.Instance != null)
+                UIManager.Instance.ShowGameOver();
         }
     }
 }
