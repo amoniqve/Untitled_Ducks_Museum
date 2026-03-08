@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class UIManager : MonoBehaviour
 {
@@ -9,17 +10,26 @@ public class UIManager : MonoBehaviour
     public GameObject mainMenuScreen;
     public GameObject pauseMenuScreen;
     public GameObject controlsScreen;
+    public GameObject inGameControlsScreen;
     public GameObject gameOverScreen;
     public GameObject winScreen;
     public GameObject hudScreen;
 
     private bool isPaused = false;
 
+    // Tracks where controls were opened from so we can return correctly
+    private bool controlsOpenedFromGame = false;
+
     // Set to true by RestartGame() so Start() skips the main menu on reload
     private static bool restartToGame = false;
 
     // Tracks whether gameplay has started so returning to menu triggers a fresh reload
     private static bool gameStarted = false;
+
+    private const string BackToMainMenuText = "> BACK TO MAIN MENU";
+    private const string BackToGameText     = "> BACK TO GAME";
+
+    private TextMeshProUGUI controlsBackButtonText;
 
     private void Awake()
     {
@@ -28,6 +38,14 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
+        // Cache the back button TMP text in the controls screen
+        if (controlsScreen != null)
+        {
+            Transform backText = controlsScreen.transform.Find("Panel/BackButton/Text");
+            if (backText != null)
+                controlsBackButtonText = backText.GetComponent<TextMeshProUGUI>();
+        }
+
         if (restartToGame)
         {
             restartToGame = false;
@@ -44,8 +62,22 @@ public class UIManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (mainMenuScreen != null && mainMenuScreen.activeSelf)
+            // In-game controls screen — Escape resumes game directly
+            if (inGameControlsScreen != null && inGameControlsScreen.activeSelf)
+            {
+                ShowHUD();
                 return;
+            }
+
+            // Main menu controls screen — Escape returns to main menu
+            if (controlsScreen != null && controlsScreen.activeSelf)
+            {
+                CloseControlsScreen();
+                return;
+            }
+
+            // Main menu with no overlay — do nothing
+            if (mainMenuScreen != null && mainMenuScreen.activeSelf) return;
 
             TogglePause();
         }
@@ -60,6 +92,7 @@ public class UIManager : MonoBehaviour
         isPaused = false;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayMainMenuMusic();
     }
 
     /// <summary>Shows the HUD and starts gameplay.</summary>
@@ -71,6 +104,7 @@ public class UIManager : MonoBehaviour
         isPaused = false;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayAtmosphere();
     }
 
     /// <summary>Toggles the pause menu.</summary>
@@ -105,6 +139,7 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayGameOverMusic();
     }
 
     /// <summary>Shows the win screen.</summary>
@@ -115,16 +150,39 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayVictoryMusic();
     }
 
-    /// <summary>Shows the controls screen.</summary>
+    /// <summary>Opens controls from the main menu — no pause, main menu stays visible behind.</summary>
     public void ShowControlsScreen()
     {
-        HideAllScreens();
+        controlsOpenedFromGame = false;
         if (controlsScreen != null) controlsScreen.SetActive(true);
-        Time.timeScale = 1f;
+        if (controlsBackButtonText != null)
+            controlsBackButtonText.text = BackToMainMenuText;
         Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        Cursor.visible   = true;
+    }
+
+    /// <summary>Opens controls from in-game — pauses and resumes directly on close.</summary>
+    public void ShowControlsFromGame()
+    {
+        if (hudScreen             != null) hudScreen.SetActive(false);
+        if (pauseMenuScreen       != null) pauseMenuScreen.SetActive(false);
+        if (inGameControlsScreen  != null) inGameControlsScreen.SetActive(true);
+        Time.timeScale   = 0f;
+        isPaused         = true;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible   = true;
+    }
+
+    /// <summary>Closes the controls screen and returns to game or main menu.</summary>
+    public void CloseControlsScreen()
+    {
+        if (controlsOpenedFromGame)
+            ShowHUD();
+        else
+            ShowMainMenu();
     }
 
     /// <summary>Starts the game from the main menu. Reloads the scene if a game was already played.</summary>
@@ -162,11 +220,12 @@ public class UIManager : MonoBehaviour
 
     private void HideAllScreens()
     {
-        if (mainMenuScreen != null) mainMenuScreen.SetActive(false);
-        if (pauseMenuScreen != null) pauseMenuScreen.SetActive(false);
-        if (controlsScreen != null) controlsScreen.SetActive(false);
-        if (gameOverScreen != null) gameOverScreen.SetActive(false);
-        if (winScreen != null) winScreen.SetActive(false);
-        if (hudScreen != null) hudScreen.SetActive(false);
+        if (mainMenuScreen        != null) mainMenuScreen.SetActive(false);
+        if (pauseMenuScreen       != null) pauseMenuScreen.SetActive(false);
+        if (controlsScreen        != null) controlsScreen.SetActive(false);
+        if (inGameControlsScreen  != null) inGameControlsScreen.SetActive(false);
+        if (gameOverScreen        != null) gameOverScreen.SetActive(false);
+        if (winScreen             != null) winScreen.SetActive(false);
+        if (hudScreen             != null) hudScreen.SetActive(false);
     }
 }

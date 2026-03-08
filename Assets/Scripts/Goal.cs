@@ -1,21 +1,7 @@
 using UnityEngine;
-using System.Collections;
 
-public class Goal : MonoBehaviour
-{
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            Debug.Log("You Win!");
-            StartCoroutine(WinDelay());
-        }
-    }
-
-    IEnumerator WinDelay()
-    {
-        yield return new WaitForSeconds(1f);
-        if (UIManager.Instance != null)
-            UIManager.Instance.ShowWinScreen();
-    }
-}
+/// <summary>
+/// Intentionally disabled — win is triggered exclusively by ArtifactInteraction (pressing E).
+/// Kept to avoid missing-script errors on any GameObject that still has this component.
+/// </summary>
+public class Goal : MonoBehaviour { }

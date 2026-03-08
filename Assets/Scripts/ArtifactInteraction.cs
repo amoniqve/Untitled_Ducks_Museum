@@ -2,14 +2,16 @@ using UnityEngine;
 
 public class ArtifactInteraction : MonoBehaviour
 {
-    private const string PromptText = "Press [E] to pick up";
+    private const string PromptText = "[ E ]  Pick up artifact";
 
     [Header("Settings")]
-    public float interactRange = 2.5f;
+    public float interactRange = 4f;
 
     private Transform player;
-    private bool isInRange = false;
+    private bool isInRange  = false;
     private bool isPickedUp = false;
+
+    private HUDController Hud => HUDController.Instance;
 
     private void Start()
     {
@@ -18,13 +20,15 @@ public class ArtifactInteraction : MonoBehaviour
             player = playerObj.transform;
     }
 
-    private HUDController Hud => HUDController.Instance;
-
     private void Update()
     {
         if (isPickedUp || player == null) return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        // Flatten Y so vertical height difference doesn't shrink the effective range
+        float distance = Vector3.Distance(
+            new Vector3(transform.position.x, player.position.y, transform.position.z),
+            player.position);
+
         bool inRange = distance <= interactRange;
 
         if (inRange && !isInRange)
