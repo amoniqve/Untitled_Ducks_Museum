@@ -13,13 +13,13 @@ public class GuardAI : MonoBehaviour
     public float chaseStopDistance = 8f;
 
     [Header("Detection Meter Settings")]
-    public float detectionRaiseRate = 0.5f;   // base fill rate when guard sees player
-    public float detectionDecayRate = 0.2f;   // how fast bar empties when no detection
-    public float chaseDetectionRate = 0.8f;   // fill rate while actively chasing
+    public float detectionRaiseRate = 0.5f;
+    public float detectionDecayRate = 0.2f;
+    public float chaseDetectionRate = 0.8f;
 
     private bool isChasing = false;
     private DetectionMeter detectionMeter;
-    private float detectionGracePeriod = 2f; // seconds before detection starts
+    private float detectionGracePeriod = 2f;
     private float graceTimer = 0f;
 
     [Header("Vision Cone Settings")]
@@ -37,16 +37,19 @@ public class GuardAI : MonoBehaviour
     [Header("Safe Zone Settings")]
     public string safeZoneTag = "SafeZone";
 
+    private ChaseManager chaseManager;
+
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+
         if (patrolPoints.Length > 0)
             agent.destination = patrolPoints[currentPoint].position;
 
         startY = transform.position.y;
 
-        // true = include inactive GameObjects so HUD doesn't need to be active at Start()
         detectionMeter = FindObjectOfType<DetectionMeter>(true);
+        chaseManager = FindObjectOfType<ChaseManager>();
     }
 
     void Update()
@@ -84,20 +87,21 @@ public class GuardAI : MonoBehaviour
 
         if (IsPlayerInSafeZone())
         {
-            isChasing = false;
+            StopChase();
             return;
         }
 
         if (CanSeePlayer())
         {
-            isChasing = true;
+            StartChase();
             return;
         }
 
         Vector3 guardPos  = new Vector3(transform.position.x, 0, transform.position.z);
         Vector3 playerPos = new Vector3(player.position.x,    0, player.position.z);
+
         if (Vector3.Distance(guardPos, playerPos) < detectionRange)
-            isChasing = true;
+            StartChase();
     }
 
     void ChasePlayer()
@@ -106,7 +110,7 @@ public class GuardAI : MonoBehaviour
 
         if (IsPlayerInSafeZone())
         {
-            isChasing = false;
+            StopChase();
             agent.destination = patrolPoints[currentPoint].position;
             return;
         }
@@ -115,23 +119,40 @@ public class GuardAI : MonoBehaviour
 
         Vector3 guardPos  = new Vector3(transform.position.x, 0, transform.position.z);
         Vector3 playerPos = new Vector3(player.position.x,    0, player.position.z);
+
         if (Vector3.Distance(guardPos, playerPos) > chaseStopDistance)
         {
-            isChasing = false;
+            StopChase();
             agent.destination = patrolPoints[currentPoint].position;
         }
     }
 
-    /// <summary>
-    /// Fills the detection bar based on distance to the player.
-    /// Closer guard = faster fill. At max range it decays. Purely visual — no game-over.
-    /// </summary>
+    void StartChase()
+    {
+        if (isChasing) return;
+
+        isChasing = true;
+
+        if (chaseManager != null)
+            chaseManager.StartChase();
+    }
+
+    void StopChase()
+    {
+        if (!isChasing) return;
+
+        isChasing = false;
+
+        if (chaseManager != null)
+            chaseManager.StopChase();
+    }
+
     void UpdateDetectionMeter()
     {
         if (detectionMeter == null || player == null) return;
 
-        // Grace period — bar stays empty at startup
         graceTimer += Time.deltaTime;
+
         if (graceTimer < detectionGracePeriod)
         {
             detectionMeter.SetActiveDetection(false);
@@ -156,6 +177,7 @@ public class GuardAI : MonoBehaviour
         if (detecting)
         {
             float proximityFactor = 1f - Mathf.Clamp01(dist / detectionRange);
+
             float rate = isChasing
                 ? chaseDetectionRate
                 : Mathf.Lerp(detectionRaiseRate * 0.3f, detectionRaiseRate, proximityFactor);
@@ -194,10 +216,13 @@ public class GuardAI : MonoBehaviour
         if (player == null) return false;
 
         Collider[] hitColliders = Physics.OverlapSphere(player.position, 0.1f);
+
         foreach (var col in hitColliders)
         {
-            if (col.CompareTag(safeZoneTag)) return true;
+            if (col.CompareTag(safeZoneTag))
+                return true;
         }
+
         return false;
     }
 
