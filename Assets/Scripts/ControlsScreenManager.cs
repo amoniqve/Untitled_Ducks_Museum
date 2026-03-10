@@ -1,15 +1,8 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Linq;
 
-public class ControlsScreenManager : MonoBehaviour
-{
-    private void Start()
-    {
-        Button[] buttons = GetComponentsInChildren<Button>(true);
-        Button back = buttons.FirstOrDefault(b => b.name == "BackButton");
+/// <summary>
+/// Intentionally emptied — back button routing is handled by UIManager directly.
+/// Kept to avoid missing-script errors on the ControlsScreen GameObject.
+/// </summary>
+public class ControlsScreenManager : MonoBehaviour { }
 
-        if (back != null)
-            back.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
-    }
-}
