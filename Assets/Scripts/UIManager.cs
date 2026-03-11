@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 public class UIManager : MonoBehaviour
@@ -15,16 +17,16 @@ public class UIManager : MonoBehaviour
     public GameObject winScreen;
     public GameObject hudScreen;
 
-    private bool isPaused = false;
-
-    // Tracks where controls were opened from so we can return correctly
+    private bool isPaused   = false;
     private bool controlsOpenedFromGame = false;
-
-    // Set to true by RestartGame() so Start() skips the main menu on reload
     private static bool restartToGame = false;
+    private static bool gameStarted   = false;
 
-    // Tracks whether gameplay has started so returning to menu triggers a fresh reload
-    private static bool gameStarted = false;
+    /// <summary>
+    /// True once the player wins or loses. Guards and other gameplay systems
+    /// poll this to stop acting after the game has ended.
+    /// </summary>
+    public bool IsGameFinished { get; private set; } = false;
 
     private const string BackToMainMenuText = "> BACK TO MAIN MENU";
     private const string BackToGameText     = "> BACK TO GAME";
@@ -34,11 +36,14 @@ public class UIManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        IsGameFinished = false;
     }
 
     private void Start()
     {
-        // Cache the back button TMP text in the controls screen
+        // Wire all screen buttons in code so inspector target=null never silently breaks them
+        WireButtonListeners();
+
         if (controlsScreen != null)
         {
             Transform backText = controlsScreen.transform.Find("Panel/BackButton/Text");
@@ -58,25 +63,51 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adds runtime onClick listeners ONLY for Win and GameOver screen buttons,
+    /// which are the only buttons confirmed to have genuinely broken inspector targets.
+    /// Every other screen (main menu, pause, controls) has valid inspector connections
+    /// and must NOT receive extra listeners — that would cause double StartGame() calls.
+    /// </summary>
+    private void WireButtonListeners()
+    {
+        AddListener(winScreen,      "Panel/PlayAgainButton", RestartGame);
+        AddListener(winScreen,      "Panel/MainMenuButton",  ShowMainMenu);
+        AddListener(gameOverScreen, "Panel/RetryButton",     RestartGame);
+        AddListener(gameOverScreen, "Panel/MainMenuButton",  ShowMainMenu);
+    }
+
+    /// <summary>Finds a Button at relPath inside parent and adds a runtime listener.</summary>
+    private static void AddListener(GameObject parent, string relPath, UnityEngine.Events.UnityAction action)
+    {
+        if (parent == null) return;
+        Transform t = parent.transform.Find(relPath);
+        if (t == null) return;
+        Button b = t.GetComponent<Button>();
+        if (b == null) return;
+        // Remove the listener first to prevent duplicates if Awake fires twice (DontDestroyOnLoad edge case)
+        b.onClick.RemoveListener(action);
+        b.onClick.AddListener(action);
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        bool pausePressed = Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton7);
+
+        if (pausePressed)
         {
-            // In-game controls screen — Escape resumes game directly
             if (inGameControlsScreen != null && inGameControlsScreen.activeSelf)
             {
                 ShowHUD();
                 return;
             }
 
-            // Main menu controls screen — Escape returns to main menu
             if (controlsScreen != null && controlsScreen.activeSelf)
             {
                 CloseControlsScreen();
                 return;
             }
 
-            // Main menu with no overlay — do nothing
             if (mainMenuScreen != null && mainMenuScreen.activeSelf) return;
 
             TogglePause();
@@ -93,6 +124,7 @@ public class UIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         if (AudioManager.Instance != null) AudioManager.Instance.PlayMainMenuMusic();
+        SelectFirstButtonIn(mainMenuScreen);
     }
 
     /// <summary>Shows the HUD and starts gameplay.</summary>
@@ -105,6 +137,9 @@ public class UIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         if (AudioManager.Instance != null) AudioManager.Instance.PlayAtmosphere();
+        // Clear selection so controller focus leaves menus
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(null);
     }
 
     /// <summary>Toggles the pause menu.</summary>
@@ -119,6 +154,7 @@ public class UIManager : MonoBehaviour
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            SelectFirstButtonIn(pauseMenuScreen);
         }
         else
         {
@@ -128,29 +164,36 @@ public class UIManager : MonoBehaviour
             Time.timeScale = 1f;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(null);
         }
     }
 
     /// <summary>Shows the game over screen.</summary>
     public void ShowGameOver()
     {
+        if (IsGameFinished) return; // never overwrite win screen
+        IsGameFinished = true;
         HideAllScreens();
         if (gameOverScreen != null) gameOverScreen.SetActive(true);
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         if (AudioManager.Instance != null) AudioManager.Instance.PlayGameOverMusic();
+        SelectFirstButtonIn(gameOverScreen);
     }
 
     /// <summary>Shows the win screen.</summary>
     public void ShowWinScreen()
     {
+        IsGameFinished = true;
         HideAllScreens();
         if (winScreen != null) winScreen.SetActive(true);
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         if (AudioManager.Instance != null) AudioManager.Instance.PlayVictoryMusic();
+        SelectFirstButtonIn(winScreen);
     }
 
     /// <summary>Opens controls from the main menu — no pause, main menu stays visible behind.</summary>
@@ -162,30 +205,82 @@ public class UIManager : MonoBehaviour
             controlsBackButtonText.text = BackToMainMenuText;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible   = true;
+        SelectFirstButtonIn(controlsScreen);
     }
 
     /// <summary>Opens controls from in-game — pauses and resumes directly on close.</summary>
     public void ShowControlsFromGame()
     {
-        if (hudScreen             != null) hudScreen.SetActive(false);
-        if (pauseMenuScreen       != null) pauseMenuScreen.SetActive(false);
-        if (inGameControlsScreen  != null) inGameControlsScreen.SetActive(true);
+        controlsOpenedFromGame = true;  // ensure B/back returns to game, not main menu
+        if (hudScreen            != null) hudScreen.SetActive(false);
+        if (pauseMenuScreen      != null) pauseMenuScreen.SetActive(false);
+        if (inGameControlsScreen != null) inGameControlsScreen.SetActive(true);
         Time.timeScale   = 0f;
         isPaused         = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible   = true;
+        SelectFirstButtonIn(inGameControlsScreen);
     }
 
     /// <summary>Closes the controls screen and returns to game or main menu.</summary>
     public void CloseControlsScreen()
     {
-        if (controlsOpenedFromGame)
+        bool fromGame = controlsOpenedFromGame;
+        controlsOpenedFromGame = false;
+        if (fromGame)
             ShowHUD();
         else
             ShowMainMenu();
     }
 
-    /// <summary>Starts the game from the main menu. Reloads the scene if a game was already played.</summary>
+    /// <summary>
+    /// Returns the deepest active menu screen so MenuNavigator never navigates
+    /// to buttons on screens hidden behind the currently visible one.
+    /// Priority: in-game controls > controls > pause > win > game over > main menu.
+    /// </summary>
+    public GameObject CurrentNavigationRoot
+    {
+        get
+        {
+            if (inGameControlsScreen != null && inGameControlsScreen.activeSelf) return inGameControlsScreen;
+            if (controlsScreen       != null && controlsScreen.activeSelf)       return controlsScreen;
+            if (pauseMenuScreen      != null && pauseMenuScreen.activeSelf)       return pauseMenuScreen;
+            if (winScreen            != null && winScreen.activeSelf)             return winScreen;
+            if (gameOverScreen       != null && gameOverScreen.activeSelf)        return gameOverScreen;
+            if (mainMenuScreen       != null && mainMenuScreen.activeSelf)        return mainMenuScreen;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Called by MenuNavigator B button — navigates back from whatever is currently open.
+    /// </summary>
+    public void GoBack()
+    {
+        if (inGameControlsScreen != null && inGameControlsScreen.activeSelf)
+        {
+            // Return to pause menu from in-game controls
+            inGameControlsScreen.SetActive(false);
+            if (pauseMenuScreen != null) pauseMenuScreen.SetActive(true);
+            SelectFirstButtonIn(pauseMenuScreen);
+            return;
+        }
+
+        if (controlsScreen != null && controlsScreen.activeSelf)
+        {
+            CloseControlsScreen();
+            return;
+        }
+
+        if (pauseMenuScreen != null && pauseMenuScreen.activeSelf)
+        {
+            TogglePause(); // unpause
+            return;
+        }
+        // Main menu / win / game over — B does nothing
+    }
+
+    /// <summary>Starts the game from the main menu.</summary>
     public void StartGame()
     {
         if (gameStarted)
@@ -218,14 +313,30 @@ public class UIManager : MonoBehaviour
 #endif
     }
 
+    /// <summary>Selects the first interactable button inside a screen for controller navigation.</summary>
+    private void SelectFirstButtonIn(GameObject screen)
+    {
+        if (screen == null || EventSystem.current == null) return;
+        Button[] buttons = screen.GetComponentsInChildren<Button>(false);
+        foreach (Button b in buttons)
+        {
+            if (b.gameObject.activeInHierarchy && b.interactable)
+            {
+                EventSystem.current.SetSelectedGameObject(b.gameObject);
+                return;
+            }
+        }
+    }
+
     private void HideAllScreens()
     {
-        if (mainMenuScreen        != null) mainMenuScreen.SetActive(false);
-        if (pauseMenuScreen       != null) pauseMenuScreen.SetActive(false);
-        if (controlsScreen        != null) controlsScreen.SetActive(false);
-        if (inGameControlsScreen  != null) inGameControlsScreen.SetActive(false);
-        if (gameOverScreen        != null) gameOverScreen.SetActive(false);
-        if (winScreen             != null) winScreen.SetActive(false);
-        if (hudScreen             != null) hudScreen.SetActive(false);
+        if (mainMenuScreen       != null) mainMenuScreen.SetActive(false);
+        if (pauseMenuScreen      != null) pauseMenuScreen.SetActive(false);
+        if (controlsScreen       != null) controlsScreen.SetActive(false);
+        if (inGameControlsScreen != null) inGameControlsScreen.SetActive(false);
+        if (gameOverScreen       != null) gameOverScreen.SetActive(false);
+        if (winScreen            != null) winScreen.SetActive(false);
+        if (hudScreen            != null) hudScreen.SetActive(false);
     }
 }
+

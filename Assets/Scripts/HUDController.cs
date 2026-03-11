@@ -117,7 +117,7 @@ public class HUDController : MonoBehaviour
 
     private void UpdateStamina()
     {
-        isSprinting = Input.GetKey(KeyCode.LeftShift);
+        isSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.JoystickButton4); // LeftShift or LB
 
         if (isSprinting && currentStamina > 0f)
             currentStamina -= staminaDrainRate * Time.deltaTime;
@@ -129,8 +129,8 @@ public class HUDController : MonoBehaviour
         if (staminaFill != null)
         {
             float ratio = currentStamina / maxStamina;
-            staminaFill.anchorMin = new Vector2(0f,   staminaFill.anchorMin.y);
-            staminaFill.anchorMax = new Vector2(ratio, staminaFill.anchorMax.y);
+            staminaFill.anchorMin = new Vector2(0f,    staminaFill.anchorMin.y);
+            staminaFill.anchorMax = new Vector2(ratio,  staminaFill.anchorMax.y);
         }
     }
 

@@ -75,6 +75,8 @@ public class GuardAI : MonoBehaviour
 
     void Update()
     {
+        if (UIManager.Instance != null && UIManager.Instance.IsGameFinished) return;
+
         if (isStatue) return;
 
         if (!isChasing)

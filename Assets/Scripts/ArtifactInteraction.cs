@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class ArtifactInteraction : MonoBehaviour
 {
-    private const string PromptText = "[ E ]  Pick up artifact";
+    private const string KeyboardPrompt   = "[ E ]  Pick up artifact";
+    private const string ControllerPrompt = "[ A ]  Pick up artifact";
 
     [Header("Settings")]
     public float interactRange = 4f;
@@ -34,7 +35,7 @@ public class ArtifactInteraction : MonoBehaviour
         if (inRange && !isInRange)
         {
             isInRange = true;
-            if (Hud != null) Hud.ShowInteractionPrompt(PromptText);
+            UpdatePrompt();
         }
         else if (!inRange && isInRange)
         {
@@ -42,8 +43,20 @@ public class ArtifactInteraction : MonoBehaviour
             if (Hud != null) Hud.HideInteractionPrompt();
         }
 
-        if (isInRange && Input.GetKeyDown(KeyCode.E))
+        // Update prompt text if device changed while in range
+        if (isInRange)
+            UpdatePrompt();
+
+        if (isInRange && (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.JoystickButton0)))
             PickUp();
+    }
+
+    /// <summary>Refreshes the prompt text based on the active input device.</summary>
+    private void UpdatePrompt()
+    {
+        if (Hud == null) return;
+        bool controller = InputDeviceTracker.Instance != null && InputDeviceTracker.Instance.UsingController;
+        Hud.ShowInteractionPrompt(controller ? ControllerPrompt : KeyboardPrompt);
     }
 
     /// <summary>Picks up the artifact and triggers the win screen.</summary>
@@ -61,3 +74,4 @@ public class ArtifactInteraction : MonoBehaviour
         if (Hud != null) Hud.HideInteractionPrompt();
     }
 }
+
