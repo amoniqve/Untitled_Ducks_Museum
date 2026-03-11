@@ -2,41 +2,70 @@ using UnityEngine;
 
 public class MouseLook : MonoBehaviour
 {
+    [Header("Sensitivity")]
     public float mouseSensitivity      = 100f;
-    public float controllerSensitivity = 400f;
+    public float controllerSensitivity = 150f;
     public Transform playerBody;
 
-    private const string RightStickX = "RightStickX"; // horizontal — drives yaw
-    private const string RightStickY = "RightStickY"; // vertical   — drives pitch
+    [Header("Stick Feel — tune in Play Mode")]
+    [Tooltip("Stick must exceed this before any output is produced. Eliminates drift.")]
+    [SerializeField] [Range(0f, 0.4f)]  private float stickDeadzone    = 0.10f;
 
-    private float xRotation = 0f;
+    [Tooltip("1 = linear. Higher values compress slow speeds and expand fast ones. Try 1.2–1.5.")]
+    [SerializeField] [Range(1f, 3f)]    private float stickCurvePower  = 1.3f;
 
-    void Update()
+    [Tooltip("0 = no smoothing (instant). Higher values ease in/out more. Try 0.05–0.15.")]
+    [SerializeField] [Range(0f, 0.4f)]  private float stickSmoothing   = 0.07f;
+
+    private const string RightStickX = "RightStickX";
+    private const string RightStickY = "RightStickY";
+
+    private float xRotation   = 0f;
+    private float smoothYaw   = 0f;
+    private float smoothPitch = 0f;
+
+    private void Update()
     {
-        // Only run during gameplay — cursor is locked during play, unlocked during menus and game-over
         if (Cursor.lockState != CursorLockMode.Locked) return;
 
-        // Mouse
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity      * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity      * Time.deltaTime;
+        // ── Mouse ─────────────────────────────────────────────────────────────
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        // Right stick — software deadzone on top of Input Manager deadzone to suppress controller drift
-        float stickYaw   = Stick(RightStickX) * controllerSensitivity * Time.deltaTime;
-        float stickPitch = Stick(RightStickY) * controllerSensitivity * Time.deltaTime;
+        // ── Right stick ───────────────────────────────────────────────────────
+        float rawYaw   = Stick(RightStickX);
+        float rawPitch = Stick(RightStickY);
 
-        // Vertical look (pitch)
+        // Non-linear curve: preserves sign, compresses low end, opens up high end.
+        float curvedYaw   = Mathf.Sign(rawYaw)   * Mathf.Pow(Mathf.Abs(rawYaw),   stickCurvePower);
+        float curvedPitch = Mathf.Sign(rawPitch)  * Mathf.Pow(Mathf.Abs(rawPitch), stickCurvePower);
+
+        // Light lerp to smooth snap-back on release without adding perceptible lag.
+        float lerpT     = 1f - stickSmoothing;
+        smoothYaw       = Mathf.Lerp(smoothYaw,   curvedYaw,   lerpT);
+        smoothPitch     = Mathf.Lerp(smoothPitch, curvedPitch, lerpT);
+
+        float stickYaw   = smoothYaw   * controllerSensitivity * Time.deltaTime;
+        float stickPitch = smoothPitch * controllerSensitivity * Time.deltaTime;
+
+        // ── Apply rotation ────────────────────────────────────────────────────
         xRotation -= mouseY + stickPitch;
         xRotation  = Mathf.Clamp(xRotation, -90f, 90f);
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
-        // Horizontal look (yaw — rotates player body)
         playerBody.Rotate(Vector3.up * (mouseX + stickYaw));
     }
 
-    /// <summary>Returns the axis value zeroed below the deadzone threshold to suppress stick drift.</summary>
-    private static float Stick(string axis, float deadzone = 0.12f)
+    /// <summary>
+    /// Reads the raw hardware axis value (no Unity smoothing), applies a software
+    /// deadzone, then remaps the live range [deadzone, 1] to [0, 1] so there is no
+    /// output jump at the deadzone boundary.
+    /// </summary>
+    private float Stick(string axis)
     {
-        float v = Input.GetAxis(axis);
-        return Mathf.Abs(v) < deadzone ? 0f : v;
+        float v = Input.GetAxisRaw(axis);
+        float abs = Mathf.Abs(v);
+        if (abs < stickDeadzone) return 0f;
+        return Mathf.Sign(v) * (abs - stickDeadzone) / (1f - stickDeadzone);
     }
 }

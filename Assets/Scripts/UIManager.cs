@@ -275,16 +275,11 @@ public class UIManager : MonoBehaviour
 #endif
     }
 
-    /// <summary>
-    /// Wires runtime onClick listeners for buttons whose Inspector targets are null or broken.
-    /// ControlsButton calls ShowControlsFromGame() (already correct in Inspector).
-    /// ResumeButton has a null Inspector target so we wire it here.
-    /// Win/GameOver buttons are also wired here.
-    /// </summary>
     private void WireButtonListeners()
     {
-        // Pause menu — ResumeButton's Inspector target is null; wire it safely here
-        AddListener(pauseMenuScreen, "Panel/ResumeButton",  TogglePause);
+        // Pause menu — ResumeButton and MainMenuButton (ABORT MISSION) have null Inspector targets
+        AddListener(pauseMenuScreen, "Panel/ResumeButton",   TogglePause);
+        AddListener(pauseMenuScreen, "Panel/MainMenuButton", ShowMainMenu);
 
         // Win / GameOver screens
         AddListener(winScreen,      "Panel/PlayAgainButton", RestartGame);

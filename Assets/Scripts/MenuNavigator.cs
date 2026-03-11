@@ -71,13 +71,12 @@ public class MenuNavigator : MonoBehaviour
         float dpadY  = Input.GetAxisRaw(DPadY);
         float stickY = Input.GetAxisRaw(StickY);
 
-        // Prefer d-pad; fall back to left stick
         float rawY  = Mathf.Abs(dpadY) > NavThreshold ? dpadY : stickY;
         float dpadX = Input.GetAxisRaw(DPadX);
 
         int dir = 0;
-        if (rawY >  NavThreshold) dir = -1; // up   → move selection up
-        if (rawY < -NavThreshold) dir =  1; // down → move selection down
+        if (rawY >  NavThreshold) dir = -1;
+        if (rawY < -NavThreshold) dir =  1;
 
         int hDir = 0;
         if (dpadX >  NavThreshold) hDir =  1;
@@ -96,7 +95,7 @@ public class MenuNavigator : MonoBehaviour
 
         if (!isHolding || dir != lastNavDir)
         {
-            Navigate(dir, hDir);
+            DispatchNavigation(dir, hDir);
             isHolding   = true;
             lastNavDir  = dir;
             holdTimer   = 0f;
@@ -110,11 +109,45 @@ public class MenuNavigator : MonoBehaviour
                 repeatTimer += Time.unscaledDeltaTime;
                 if (repeatTimer >= repeatInterval)
                 {
-                    Navigate(dir, hDir);
+                    DispatchNavigation(dir, hDir);
                     repeatTimer = 0f;
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Routes navigation — horizontal D-pad adjusts a selected Slider's value
+    /// instead of moving focus. Vertical always moves between selectables.
+    /// </summary>
+    private void DispatchNavigation(int vertDir, int horzDir)
+    {
+        if (horzDir != 0 && AdjustSelectedSlider(horzDir)) return;
+        Navigate(vertDir, horzDir);
+    }
+
+    /// <summary>
+    /// Steps the currently selected Slider with accelerating increments the longer
+    /// D-pad is held. Starts at 1 per step, ramps up to 10 at maximum hold.
+    /// Returns true when a Slider was adjusted so normal navigation is suppressed.
+    /// </summary>
+    private bool AdjustSelectedSlider(int horzDir)
+    {
+        GameObject current = EventSystem.current.currentSelectedGameObject;
+        if (current == null) return false;
+
+        Slider slider = current.GetComponent<Slider>();
+        if (slider == null || !slider.interactable) return false;
+
+        // Hold-time acceleration: slow start for fine control, faster for large adjustments
+        float step;
+        if      (holdTimer < 0.8f) step = 1f;
+        else if (holdTimer < 2.0f) step = 2f;
+        else if (holdTimer < 4.0f) step = 5f;
+        else                       step = 10f;
+
+        slider.value = Mathf.Clamp(slider.value + horzDir * step, slider.minValue, slider.maxValue);
+        return true;
     }
 
     private void Navigate(int vertDir, int horzDir)
@@ -178,21 +211,35 @@ public class MenuNavigator : MonoBehaviour
     }
 
     /// <summary>
-    /// Picks the first active, interactable selectable that belongs to the current
-    /// navigation root (the focused screen). Falls back to any active selectable if
-    /// no root is defined.
+    /// Selects the first active, interactable selectable within the current navigation
+    /// root, ordered by vertical screen position (topmost first). Falls back to any
+    /// active selectable if no root is defined.
     /// </summary>
     private void SelectFirst()
     {
         GameObject root = UIManager.Instance?.NavigationRoot;
 
+        Selectable best     = null;
+        float      bestTop  = float.NegativeInfinity;
+
         foreach (Selectable sel in Selectable.allSelectablesArray)
         {
             if (!sel.gameObject.activeInHierarchy || !sel.interactable) continue;
             if (root != null && !sel.transform.IsChildOf(root.transform)) continue;
-            EventSystem.current.SetSelectedGameObject(sel.gameObject);
-            return;
+
+            // Use the world-space top edge of the RectTransform as the sort key
+            RectTransform rt = sel.GetComponent<RectTransform>();
+            float top = rt != null ? rt.position.y : sel.transform.position.y;
+
+            if (top > bestTop)
+            {
+                bestTop = top;
+                best    = sel;
+            }
         }
+
+        if (best != null)
+            EventSystem.current.SetSelectedGameObject(best.gameObject);
     }
 
     // ── Pulse Highlight ────────────────────────────────────────────────────────
@@ -203,8 +250,8 @@ public class MenuNavigator : MonoBehaviour
 
         if (nowSelected != lastHighlighted)
         {
-            // Restore old button
-            if (lastHighlighted != null)
+            // Restore old element — skip if it's a Slider (SliderSelectIndicator owns that)
+            if (lastHighlighted != null && lastHighlighted.GetComponent<Slider>() == null)
             {
                 TextMeshProUGUI old = lastHighlighted.GetComponentInChildren<TextMeshProUGUI>();
                 if (old != null) old.color = cachedColour;
@@ -213,8 +260,8 @@ public class MenuNavigator : MonoBehaviour
 
             lastHighlighted = nowSelected;
 
-            // Cache new button's colour
-            if (lastHighlighted != null)
+            // Cache colour of the newly selected element — skip Sliders
+            if (lastHighlighted != null && lastHighlighted.GetComponent<Slider>() == null)
             {
                 TextMeshProUGUI txt = lastHighlighted.GetComponentInChildren<TextMeshProUGUI>();
                 if (txt != null) cachedColour = txt.color;
@@ -223,6 +270,9 @@ public class MenuNavigator : MonoBehaviour
 
         if (lastHighlighted == null) return;
 
+        // Sliders handle their own visual feedback via SliderSelectIndicator
+        if (lastHighlighted.GetComponent<Slider>() != null) return;
+
         TextMeshProUGUI label = lastHighlighted.GetComponentInChildren<TextMeshProUGUI>();
         if (label == null) return;
 
@@ -230,7 +280,7 @@ public class MenuNavigator : MonoBehaviour
         float t = (Mathf.Sin(Time.unscaledTime * pulseSpeed) + 1f) * 0.5f;
         label.color = Color.Lerp(pulseColourA, pulseColourB, t);
 
-        // Subtle scale swell gives a glow-like emphasis without touching materials
+        // Subtle scale swell
         float scale = 1.0f + 0.06f * t;
         lastHighlighted.transform.localScale = new Vector3(scale, scale, 1f);
     }
@@ -238,9 +288,14 @@ public class MenuNavigator : MonoBehaviour
     private void ClearHighlight()
     {
         if (lastHighlighted == null) return;
-        TextMeshProUGUI txt = lastHighlighted.GetComponentInChildren<TextMeshProUGUI>();
-        if (txt != null) txt.color = cachedColour;
-        lastHighlighted.transform.localScale = Vector3.one;
+
+        if (lastHighlighted.GetComponent<Slider>() == null)
+        {
+            TextMeshProUGUI txt = lastHighlighted.GetComponentInChildren<TextMeshProUGUI>();
+            if (txt != null) txt.color = cachedColour;
+            lastHighlighted.transform.localScale = Vector3.one;
+        }
+
         lastHighlighted = null;
     }
 }

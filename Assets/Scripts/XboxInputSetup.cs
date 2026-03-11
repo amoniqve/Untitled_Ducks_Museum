@@ -13,6 +13,8 @@ public static class XboxInputSetup
     // Axis names used across the project
     private const string HorizontalAxis  = "Horizontal";
     private const string VerticalAxis    = "Vertical";
+    private const string LeftStickXName  = "LeftStickX";  // joystick-only left stick — controller detection
+    private const string LeftStickYName  = "LeftStickY";
     private const string RightStickXName = "RightStickX";
     private const string RightStickYName = "RightStickY";
     private const string DPadXName       = "DPadX";
@@ -36,11 +38,19 @@ public static class XboxInputSetup
         FixJoystickAxis(axes, HorizontalAxis, axisNumber: 1, invert: false);
         FixJoystickAxis(axes, VerticalAxis,   axisNumber: 2, invert: true);
 
-        // Ensure right stick and D-pad axes exist
-        EnsureJoystickAxis(axes, RightStickXName, axisNumber: 4, invert: false);
-        EnsureJoystickAxis(axes, RightStickYName, axisNumber: 5, invert: true);
-        EnsureJoystickAxis(axes, DPadXName,       axisNumber: 6, invert: false);
-        EnsureJoystickAxis(axes, DPadYName,       axisNumber: 7, invert: false);
+        // Joystick-only left stick axes — same physical axes as Horizontal/Vertical
+        // but with no keyboard binding, used solely for controller device detection
+        EnsureJoystickAxis(axes, LeftStickXName, axisNumber: 1, invert: false);
+        EnsureJoystickAxis(axes, LeftStickYName, axisNumber: 2, invert: false);
+
+        // Ensure right stick and D-pad axes exist.
+        // Dead is set to 0 for right stick — MouseLook uses GetAxisRaw which bypasses
+        // the Input Manager dead zone entirely, so the software deadzone in MouseLook
+        // is the single source of truth. A non-zero value here would only mislead.
+        EnsureJoystickAxis(axes, RightStickXName, axisNumber: 4, invert: false, dead: 0f);
+        EnsureJoystickAxis(axes, RightStickYName, axisNumber: 5, invert: true,  dead: 0f);
+        EnsureJoystickAxis(axes, DPadXName,       axisNumber: 6, invert: false, dead: 0.19f);
+        EnsureJoystickAxis(axes, DPadYName,       axisNumber: 7, invert: false, dead: 0.19f);
 
         // Remove joystick from Submit/Cancel so controller buttons don't double-fire
         StripJoystickFromButtonAxis(axes, "Submit");
@@ -51,7 +61,7 @@ public static class XboxInputSetup
     }
 
     /// <summary>Finds the JoystickAxis entry for <paramref name="name"/> and patches axis number/inversion.</summary>
-    private static void FixJoystickAxis(SerializedProperty axes, string name, int axisNumber, bool invert)
+    private static void FixJoystickAxis(SerializedProperty axes, string name, int axisNumber, bool invert, float dead = 0.19f)
     {
         for (int i = 0; i < axes.arraySize; i++)
         {
@@ -59,15 +69,15 @@ public static class XboxInputSetup
             if (a.FindPropertyRelative("m_Name").stringValue != name) continue;
             if ((AxisType)a.FindPropertyRelative("type").intValue != AxisType.JoystickAxis) continue;
 
-            a.FindPropertyRelative("axis").intValue   = axisNumber - 1; // Unity is 0-indexed internally
+            a.FindPropertyRelative("axis").intValue    = axisNumber - 1;
             a.FindPropertyRelative("invert").boolValue = invert;
-            a.FindPropertyRelative("dead").floatValue  = 0.19f;
+            a.FindPropertyRelative("dead").floatValue  = dead;
             return;
         }
     }
 
     /// <summary>Creates a JoystickAxis entry if one with <paramref name="name"/> does not already exist.</summary>
-    private static void EnsureJoystickAxis(SerializedProperty axes, string name, int axisNumber, bool invert)
+    private static void EnsureJoystickAxis(SerializedProperty axes, string name, int axisNumber, bool invert, float dead = 0.19f)
     {
         for (int i = 0; i < axes.arraySize; i++)
         {
@@ -75,33 +85,31 @@ public static class XboxInputSetup
             if (a.FindPropertyRelative("m_Name").stringValue == name &&
                 (AxisType)a.FindPropertyRelative("type").intValue == AxisType.JoystickAxis)
             {
-                // Already exists — just make sure values are correct
                 a.FindPropertyRelative("axis").intValue    = axisNumber - 1;
                 a.FindPropertyRelative("invert").boolValue = invert;
-                a.FindPropertyRelative("dead").floatValue  = 0.19f;
+                a.FindPropertyRelative("dead").floatValue  = dead;
                 return;
             }
         }
 
-        // Not found — append a new entry
         axes.InsertArrayElementAtIndex(axes.arraySize);
         SerializedProperty n = axes.GetArrayElementAtIndex(axes.arraySize - 1);
 
-        n.FindPropertyRelative("m_Name").stringValue           = name;
-        n.FindPropertyRelative("descriptiveName").stringValue  = "";
+        n.FindPropertyRelative("m_Name").stringValue                  = name;
+        n.FindPropertyRelative("descriptiveName").stringValue         = "";
         n.FindPropertyRelative("descriptiveNegativeName").stringValue = "";
-        n.FindPropertyRelative("negativeButton").stringValue   = "";
-        n.FindPropertyRelative("positiveButton").stringValue   = "";
-        n.FindPropertyRelative("altNegativeButton").stringValue = "";
-        n.FindPropertyRelative("altPositiveButton").stringValue = "";
-        n.FindPropertyRelative("gravity").floatValue           = 0f;
-        n.FindPropertyRelative("dead").floatValue              = 0.19f;
-        n.FindPropertyRelative("sensitivity").floatValue       = 1f;
-        n.FindPropertyRelative("snap").boolValue               = false;
-        n.FindPropertyRelative("invert").boolValue             = invert;
-        n.FindPropertyRelative("type").intValue                = (int)AxisType.JoystickAxis;
-        n.FindPropertyRelative("axis").intValue                = axisNumber - 1;
-        n.FindPropertyRelative("joyNum").intValue              = 0; // any joystick
+        n.FindPropertyRelative("negativeButton").stringValue          = "";
+        n.FindPropertyRelative("positiveButton").stringValue          = "";
+        n.FindPropertyRelative("altNegativeButton").stringValue       = "";
+        n.FindPropertyRelative("altPositiveButton").stringValue       = "";
+        n.FindPropertyRelative("gravity").floatValue                  = 0f;
+        n.FindPropertyRelative("dead").floatValue                     = dead;
+        n.FindPropertyRelative("sensitivity").floatValue              = 1f;
+        n.FindPropertyRelative("snap").boolValue                      = false;
+        n.FindPropertyRelative("invert").boolValue                    = invert;
+        n.FindPropertyRelative("type").intValue                       = (int)AxisType.JoystickAxis;
+        n.FindPropertyRelative("axis").intValue                       = axisNumber - 1;
+        n.FindPropertyRelative("joyNum").intValue                     = 0;
     }
 
     /// <summary>

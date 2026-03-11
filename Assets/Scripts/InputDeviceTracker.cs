@@ -1,10 +1,14 @@
 using UnityEngine;
 using TMPro;
+using System;
 
 /// <summary>
-/// Tracks whether the player is using a gamepad or mouse+keyboard and
-/// swaps interaction prompt text accordingly each frame.
-/// Attach to any persistent GameObject (e.g. Managers).
+/// Tracks whether the player is using a gamepad or mouse+keyboard.
+/// Controller input sets the flag immediately.
+/// Switching back to keyboard requires sustained mouse/key input for
+/// KeyboardFrameGrace consecutive frames after controller axes settle —
+/// this prevents right-stick release momentum from flipping the flag back.
+/// Subscribe to OnDeviceChanged to react to switches anywhere in the codebase.
 /// </summary>
 public class InputDeviceTracker : MonoBehaviour
 {
@@ -12,6 +16,9 @@ public class InputDeviceTracker : MonoBehaviour
 
     /// <summary>True when the last detected input was from a gamepad.</summary>
     public bool IsUsingController { get; private set; }
+
+    /// <summary>Fired whenever the active input device changes. Arg is true = controller.</summary>
+    public event Action<bool> OnDeviceChanged;
 
     [Header("Prompt Override (optional)")]
     [Tooltip("Leave null if prompts are driven by ArtifactInteraction instead.")]
@@ -21,10 +28,11 @@ public class InputDeviceTracker : MonoBehaviour
     public string mousePrompt      = "[E] Interact";
     public string controllerPrompt = "[A] Interact";
 
-    // Axes/buttons that indicate controller usage
-    private static readonly string[] WatchAxes =
+    // Only unambiguous controller-only axes — not shared with WASD
+    // LeftStickX/Y are joystick-only bindings on the same physical axes as Horizontal/Vertical
+    private static readonly string[] ControllerAxes =
     {
-        "RightStickX", "RightStickY", "Horizontal", "Vertical"
+        "LeftStickX", "LeftStickY", "RightStickX", "RightStickY", "DPadX", "DPadY"
     };
 
     private const float StickThreshold = 0.2f;
@@ -36,40 +44,72 @@ public class InputDeviceTracker : MonoBehaviour
 
     private void Update()
     {
-        bool wasController = IsUsingController;
+        bool wasController    = IsUsingController;
+        bool controllerSignal = false;
+        bool keyboardSignal   = false;
 
-        // Detect controller input
-        foreach (string axis in WatchAxes)
-        {
-            if (Mathf.Abs(Input.GetAxisRaw(axis)) > StickThreshold)
-            {
-                IsUsingController = true;
-                break;
-            }
-        }
+        // ── Controller signals ────────────────────────────────────────────────
 
-        // Any joystick button press → controller
         for (int i = 0; i < 20; i++)
         {
             if (Input.GetKeyDown((KeyCode)(KeyCode.JoystickButton0 + i)))
             {
-                IsUsingController = true;
+                controllerSignal = true;
                 break;
             }
         }
 
-        // Any mouse or keyboard input → mouse+keyboard
-        if (Input.anyKeyDown && !IsUsingController)
-            IsUsingController = false;
+        if (!controllerSignal)
+        {
+            foreach (string axis in ControllerAxes)
+            {
+                if (Mathf.Abs(Input.GetAxisRaw(axis)) > StickThreshold)
+                {
+                    controllerSignal = true;
+                    break;
+                }
+            }
+        }
 
-        if (Input.GetAxisRaw("Mouse X") != 0f || Input.GetAxisRaw("Mouse Y") != 0f)
-            IsUsingController = false;
+        // ── Keyboard signals — key presses ONLY, never mouse movement ─────────
+        // Mouse X/Y deltas are deliberately excluded: many systems report tiny
+        // non-zero mouse deltas every frame even when the mouse is untouched,
+        // which would constantly fight controller detection.
 
-        // Update optional prompt label when device changes
-        if (IsUsingController != wasController && interactionPromptText != null)
-            interactionPromptText.text = IsUsingController ? controllerPrompt : mousePrompt;
+        if (!controllerSignal && Input.anyKeyDown)
+        {
+            bool isJoystick = false;
+            for (int i = 0; i < 20; i++)
+            {
+                if (Input.GetKeyDown((KeyCode)(KeyCode.JoystickButton0 + i)))
+                {
+                    isJoystick = true;
+                    break;
+                }
+            }
+            if (!isJoystick) keyboardSignal = true;
+        }
+
+        // ── State transitions ─────────────────────────────────────────────────
+
+        if (controllerSignal)
+        {
+            IsUsingController = true;
+        }
+        else if (keyboardSignal)
+        {
+            IsUsingController = false;
+        }
+        // No input at all — hold current device unchanged
+
+        // ── Broadcast change ──────────────────────────────────────────────────
+
+        if (IsUsingController != wasController)
+        {
+            OnDeviceChanged?.Invoke(IsUsingController);
+
+            if (interactionPromptText != null)
+                interactionPromptText.text = IsUsingController ? controllerPrompt : mousePrompt;
+        }
     }
-
-    /// <summary>Returns the correct interact prompt string for the current device.</summary>
-    public string GetInteractPrompt() => IsUsingController ? controllerPrompt : mousePrompt;
 }
