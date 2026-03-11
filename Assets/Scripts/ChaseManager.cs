@@ -11,65 +11,59 @@ public class ChaseManager : MonoBehaviour
 
     private bool isChasing = false;
 
-    private void OnDestroy()
-    {
-        // Scene is reloading — stop everything so coroutines don't access destroyed Lights
-        StopAllCoroutines();
-        CancelInvoke();
-    }
-
     public void StartChase()
     {
         if (isChasing) return;
 
         isChasing = true;
 
-        SetLights(hallwayLights, false);
-        SetLights(goalRoomLights, false);
+        // turnsoff hallway floor and goal room lights 
+        foreach (Light light in hallwayLights)
+            light.enabled = false;
 
-        Invoke(nameof(TurnOffStartRoom), startRoomDelay);
+        foreach (Light light in goalRoomLights)
+            light.enabled = false;
+
+        // start room turns off after delay
+        Invoke("TurnOffStartRoom", startRoomDelay);
+
+        // start hallway flicker (slow cuz prof mentioned seizures)
         StartCoroutine(HallwayFlicker());
     }
 
-    void TurnOffStartRoom() => SetLights(startRoomLights, false);
+    void TurnOffStartRoom()
+    {
+        foreach (Light light in startRoomLights)
+            light.enabled = false;
+    }
 
     public void StopChase()
     {
         isChasing = false;
-        StopAllCoroutines();
-        CancelInvoke();
 
-        SetLights(hallwayLights, true);
-        SetLights(startRoomLights, true);
-        SetLights(goalRoomLights, true);
+        StopAllCoroutines();
+
+        // turns everything back on
+        foreach (Light light in hallwayLights)
+            light.enabled = true;
+
+        foreach (Light light in startRoomLights)
+            light.enabled = true;
+
+        foreach (Light light in goalRoomLights)
+            light.enabled = true;
     }
 
     IEnumerator HallwayFlicker()
     {
         while (isChasing)
         {
-            // Bail out if any light has been destroyed (scene reload mid-coroutine)
-            if (hallwayLights == null || hallwayLights.Length == 0) yield break;
-
             int randomIndex = Random.Range(0, hallwayLights.Length);
 
             for (int i = 0; i < hallwayLights.Length; i++)
-            {
-                if (hallwayLights[i] == null) yield break; // destroyed Light — stop cleanly
                 hallwayLights[i].enabled = (i == randomIndex);
-            }
 
             yield return new WaitForSeconds(2f);
-        }
-    }
-
-    /// <summary>Sets enabled state on a light array, skipping any destroyed references.</summary>
-    private static void SetLights(Light[] lights, bool enabled)
-    {
-        if (lights == null) return;
-        foreach (Light l in lights)
-        {
-            if (l != null) l.enabled = enabled;
         }
     }
 }

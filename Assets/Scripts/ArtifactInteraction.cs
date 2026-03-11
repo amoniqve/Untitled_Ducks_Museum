@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class ArtifactInteraction : MonoBehaviour
 {
-    private const string KeyboardPrompt   = "[ E ]  Pick up artifact";
-    private const string ControllerPrompt = "[ A ]  Pick up artifact";
-
     [Header("Settings")]
     public float interactRange = 4f;
+
+    private const KeyCode KeyboardInteract    = KeyCode.E;
+    private const KeyCode ControllerInteract  = KeyCode.JoystickButton0; // Xbox A
 
     private Transform player;
     private bool isInRange  = false;
@@ -42,21 +42,23 @@ public class ArtifactInteraction : MonoBehaviour
             isInRange = false;
             if (Hud != null) Hud.HideInteractionPrompt();
         }
-
-        // Update prompt text if device changed while in range
-        if (isInRange)
+        else if (inRange)
+        {
+            // Refresh prompt text if device changed while in range
             UpdatePrompt();
+        }
 
-        if (isInRange && (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.JoystickButton0)))
+        if (isInRange && (Input.GetKeyDown(KeyboardInteract) || Input.GetKeyDown(ControllerInteract)))
             PickUp();
     }
 
-    /// <summary>Refreshes the prompt text based on the active input device.</summary>
+    /// <summary>Shows the correct prompt based on the active input device.</summary>
     private void UpdatePrompt()
     {
         if (Hud == null) return;
-        bool controller = InputDeviceTracker.Instance != null && InputDeviceTracker.Instance.UsingController;
-        Hud.ShowInteractionPrompt(controller ? ControllerPrompt : KeyboardPrompt);
+        bool isController = InputDeviceTracker.Instance != null && InputDeviceTracker.Instance.IsUsingController;
+        string key = isController ? "[ A ]" : "[ E ]";
+        Hud.ShowInteractionPrompt($"{key}  Pick up artifact");
     }
 
     /// <summary>Picks up the artifact and triggers the win screen.</summary>
@@ -74,4 +76,3 @@ public class ArtifactInteraction : MonoBehaviour
         if (Hud != null) Hud.HideInteractionPrompt();
     }
 }
-

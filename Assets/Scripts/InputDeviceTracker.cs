@@ -1,72 +1,75 @@
 using UnityEngine;
+using TMPro;
 
 /// <summary>
-/// Tracks whether the player last used keyboard/mouse or an Xbox controller.
-/// Poll InputDeviceTracker.UsingController to switch UI prompts dynamically.
+/// Tracks whether the player is using a gamepad or mouse+keyboard and
+/// swaps interaction prompt text accordingly each frame.
+/// Attach to any persistent GameObject (e.g. Managers).
 /// </summary>
 public class InputDeviceTracker : MonoBehaviour
 {
     public static InputDeviceTracker Instance { get; private set; }
 
-    public bool UsingController { get; private set; } = false;
+    /// <summary>True when the last detected input was from a gamepad.</summary>
+    public bool IsUsingController { get; private set; }
 
-    // Axes that indicate controller use when non-zero
-    private const string RightStickX = "RightStickX";
-    private const string RightStickY = "RightStickY";
-    private const float  StickThreshold = 0.2f;
+    [Header("Prompt Override (optional)")]
+    [Tooltip("Leave null if prompts are driven by ArtifactInteraction instead.")]
+    public TextMeshProUGUI interactionPromptText;
+
+    [Header("Prompt Strings")]
+    public string mousePrompt      = "[E] Interact";
+    public string controllerPrompt = "[A] Interact";
+
+    // Axes/buttons that indicate controller usage
+    private static readonly string[] WatchAxes =
+    {
+        "RightStickX", "RightStickY", "Horizontal", "Vertical"
+    };
+
+    private const float StickThreshold = 0.2f;
 
     private void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void Update()
     {
-        // Any keyboard or mouse activity → keyboard mode
-        if (Input.anyKey || Input.GetAxis("Mouse X") != 0f || Input.GetAxis("Mouse Y") != 0f)
+        bool wasController = IsUsingController;
+
+        // Detect controller input
+        foreach (string axis in WatchAxes)
         {
-            // But joystick buttons count as controller, not keyboard
-            bool joystickButton = false;
-            for (int i = 0; i <= 19; i++)
+            if (Mathf.Abs(Input.GetAxisRaw(axis)) > StickThreshold)
             {
-                if (Input.GetKey((KeyCode)(350 + i))) // JoystickButton0..19
-                {
-                    joystickButton = true;
-                    break;
-                }
-            }
-
-            if (!joystickButton)
-            {
-                UsingController = false;
-                return;
-            }
-        }
-
-        // Any stick / joystick button activity → controller mode
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-        float rx = Input.GetAxis(RightStickX);
-        float ry = Input.GetAxis(RightStickY);
-
-        bool stickActive = Mathf.Abs(h)  > StickThreshold
-                        || Mathf.Abs(v)  > StickThreshold
-                        || Mathf.Abs(rx) > StickThreshold
-                        || Mathf.Abs(ry) > StickThreshold;
-
-        bool buttonActive = false;
-        for (int i = 0; i <= 19; i++)
-        {
-            if (Input.GetKey((KeyCode)(350 + i)))
-            {
-                buttonActive = true;
+                IsUsingController = true;
                 break;
             }
         }
 
-        if (stickActive || buttonActive)
-            UsingController = true;
+        // Any joystick button press → controller
+        for (int i = 0; i < 20; i++)
+        {
+            if (Input.GetKeyDown((KeyCode)(KeyCode.JoystickButton0 + i)))
+            {
+                IsUsingController = true;
+                break;
+            }
+        }
+
+        // Any mouse or keyboard input → mouse+keyboard
+        if (Input.anyKeyDown && !IsUsingController)
+            IsUsingController = false;
+
+        if (Input.GetAxisRaw("Mouse X") != 0f || Input.GetAxisRaw("Mouse Y") != 0f)
+            IsUsingController = false;
+
+        // Update optional prompt label when device changes
+        if (IsUsingController != wasController && interactionPromptText != null)
+            interactionPromptText.text = IsUsingController ? controllerPrompt : mousePrompt;
     }
+
+    /// <summary>Returns the correct interact prompt string for the current device.</summary>
+    public string GetInteractPrompt() => IsUsingController ? controllerPrompt : mousePrompt;
 }
