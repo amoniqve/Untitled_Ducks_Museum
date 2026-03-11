@@ -18,4 +18,14 @@ public class PauseMenuManager : MonoBehaviour
         if (controls != null) controls.onClick.AddListener(() => UIManager.Instance.ShowControlsScreen());
         if (menu != null)     menu.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
     }
+
+    private void Update()
+    {
+        // Moniiiii's code hereee <3Keyboard: ESC
+        // Xbox Controller: Start button (joystick button 7)
+        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown("joystick button 7"))
+        {
+            UIManager.Instance.TogglePause();
+        }
+    }
 }
