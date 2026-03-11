@@ -5,9 +5,7 @@ using TMPro;
 
 /// <summary>
 /// Single unified sensitivity slider. One value scales both mouse and controller
-/// sensitivity proportionally. Slider is named "MouseSensSlider" in the scene
-/// (the old separate-device ctrl elements are disabled at startup).
-/// Settings persist via PlayerPrefs.
+/// sensitivity proportionally. Settings persist via PlayerPrefs.
 /// </summary>
 public class SensitivitySettings : MonoBehaviour
 {
@@ -22,8 +20,8 @@ public class SensitivitySettings : MonoBehaviour
     private const float SensDefault = 50f;
 
     // slider × scale = actual sensitivity value fed to MouseLook
-    private const float MouseScale = 2f;  // 50 × 2  = 100 (original mouse default)
-    private const float CtrlScale  = 3f;  // 50 × 3  = 150 (original controller default)
+    private const float MouseScale = 2f;  // 50 × 2 = 100
+    private const float CtrlScale  = 3f;  // 50 × 3 = 150
 
     private Slider[]          sliders;
     private TextMeshProUGUI[] valueTexts;
@@ -36,11 +34,6 @@ public class SensitivitySettings : MonoBehaviour
         mouseLook  = FindObjectOfType<MouseLook>();
         sliders    = FindObjectsOfType<Slider>(true).Where(s => s.name == SliderName).ToArray();
         valueTexts = FindObjectsOfType<TextMeshProUGUI>(true).Where(t => t.name == ValueTextName).ToArray();
-
-        // Hide leftover two-slider elements from the previous setup
-        DisableBySliderName("CtrlSensSlider");
-        DisableByTextName("CtrlSensLabel");
-        DisableByTextName("CtrlSensValueText");
 
         float saved = PlayerPrefs.GetFloat(SensKey, SensDefault);
 
@@ -82,16 +75,5 @@ public class SensitivitySettings : MonoBehaviour
         foreach (TextMeshProUGUI t in valueTexts)
             if (t != null) t.text = display;
     }
-
-    private static void DisableBySliderName(string sliderName)
-    {
-        foreach (Slider s in FindObjectsOfType<Slider>(true))
-            if (s.name == sliderName) s.gameObject.SetActive(false);
-    }
-
-    private static void DisableByTextName(string textName)
-    {
-        foreach (TextMeshProUGUI t in FindObjectsOfType<TextMeshProUGUI>(true))
-            if (t.name == textName) t.gameObject.SetActive(false);
-    }
 }
+
