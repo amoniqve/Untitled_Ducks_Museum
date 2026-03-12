@@ -43,7 +43,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8961631004796158613}
-  m_Mesh: {fileID: -5366851690773181393, guid: cfbb95bb4bd88064d97d84753a754b7f, type: 3}
+  m_Mesh: {fileID: -3803251753705008505, guid: ca610ed47d879cc498c6b771411005eb, type: 3}
 --- !u!23 &9078245320758155906
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -144,10 +144,14 @@ MonoBehaviour:
   patrolPoints:
   - {fileID: 0}
   - {fileID: 0}
+  startAsStatue: 1
+  wakeDelay: 3
   player: {fileID: 0}
   detectionRange: 5
   chaseStopDistance: 8
-  caughtDistance: 1.5
+  detectionRaiseRate: 0.5
+  detectionDecayRate: 0.2
+  chaseDetectionRate: 0.8
   viewDistance: 5
   viewAngle: 90
   obstacleMask:
@@ -157,3 +161,5 @@ MonoBehaviour:
   bobSpeed: 2
   bobAmount: 0.3
   safeZoneTag: SafeZone
+  patrolSpeed: 3.5
+  chaseSpeed: 7
