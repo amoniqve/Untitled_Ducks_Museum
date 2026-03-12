@@ -3,11 +3,18 @@ using UnityEngine;
 
 public class ChaseManager : MonoBehaviour
 {
+    [Header("Lights")]
     public Light[] hallwayLights;
     public Light[] startRoomLights;
     public Light[] goalRoomLights;
 
     public float startRoomDelay = 5f;
+
+    [Header("Audio")]
+    public AudioClip lightsOutSound;   
+    public AudioClip flickerSound;     
+    public AudioClip lightOnSound;     
+    public AudioClip ghostChaseSound;  
 
     private bool isChasing = false;
 
@@ -17,17 +24,26 @@ public class ChaseManager : MonoBehaviour
 
         isChasing = true;
 
-        // turnsoff hallway floor and goal room lights 
+        if (ghostChaseSound != null)
+        {
+            AudioSource.PlayClipAtPoint(ghostChaseSound, Camera.main.transform.position);
+        }
+
+        if (lightsOutSound != null)
+        {
+            AudioSource.PlayClipAtPoint(lightsOutSound, Camera.main.transform.position);
+        }
+
+      
         foreach (Light light in hallwayLights)
             light.enabled = false;
 
         foreach (Light light in goalRoomLights)
             light.enabled = false;
 
-        // start room turns off after delay
+
         Invoke("TurnOffStartRoom", startRoomDelay);
 
-        // start hallway flicker (slow cuz prof mentioned seizures)
         StartCoroutine(HallwayFlicker());
     }
 
@@ -43,7 +59,7 @@ public class ChaseManager : MonoBehaviour
 
         StopAllCoroutines();
 
-        // turns everything back on
+  
         foreach (Light light in hallwayLights)
             light.enabled = true;
 
@@ -52,6 +68,15 @@ public class ChaseManager : MonoBehaviour
 
         foreach (Light light in goalRoomLights)
             light.enabled = true;
+
+  
+        if (lightOnSound != null)
+        {
+            foreach (Light light in startRoomLights)
+            {
+                AudioSource.PlayClipAtPoint(lightOnSound, light.transform.position);
+            }
+        }
     }
 
     IEnumerator HallwayFlicker()
@@ -61,9 +86,17 @@ public class ChaseManager : MonoBehaviour
             int randomIndex = Random.Range(0, hallwayLights.Length);
 
             for (int i = 0; i < hallwayLights.Length; i++)
+            {
+                bool wasEnabled = hallwayLights[i].enabled;
                 hallwayLights[i].enabled = (i == randomIndex);
 
-            yield return new WaitForSeconds(2f);
+                if (hallwayLights[i].enabled != wasEnabled && hallwayLights[i].enabled && flickerSound != null)
+                {
+                    AudioSource.PlayClipAtPoint(flickerSound, hallwayLights[i].transform.position);
+                }
+            }
+
+            yield return new WaitForSeconds(2f); 
         }
     }
 }
