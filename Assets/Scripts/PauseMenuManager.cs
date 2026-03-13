@@ -1,31 +1,12 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Linq;
 
+/// <summary>
+/// Pause menu lifecycle. Button wiring is handled entirely by inspector persistent
+/// calls — duplicate runtime listeners must NOT be added here to prevent double-firing.
+/// ESC / Start controller handling lives in UIManager.Update() for the same reason.
+/// </summary>
 public class PauseMenuManager : MonoBehaviour
 {
-    private void Start()
-    {
-        Button[] buttons = GetComponentsInChildren<Button>(true);
-
-        Button resume   = buttons.FirstOrDefault(b => b.name == "ResumeButton");
-        Button restart  = buttons.FirstOrDefault(b => b.name == "RestartButton");
-        Button controls = buttons.FirstOrDefault(b => b.name == "ControlsButton");
-        Button menu     = buttons.FirstOrDefault(b => b.name == "MainMenuButton");
-
-        if (resume != null)   resume.onClick.AddListener(() => UIManager.Instance.TogglePause());
-        if (restart != null)  restart.onClick.AddListener(() => UIManager.Instance.RestartGame());
-        if (controls != null) controls.onClick.AddListener(() => UIManager.Instance.ShowControlsScreen());
-        if (menu != null)     menu.onClick.AddListener(() => UIManager.Instance.ShowMainMenu());
-    }
-
-    private void Update()
-    {
-        // Moniiiii's code hereee <3Keyboard: ESC
-        // Xbox Controller: Start button (joystick button 7)
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown("joystick button 7"))
-        {
-            UIManager.Instance.TogglePause();
-        }
-    }
+    // Intentionally empty — all button events are wired in the Inspector
+    // and all keyboard/controller input is handled in UIManager.Update().
 }

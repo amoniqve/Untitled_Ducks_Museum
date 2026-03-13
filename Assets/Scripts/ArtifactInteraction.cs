@@ -2,10 +2,11 @@ using UnityEngine;
 
 public class ArtifactInteraction : MonoBehaviour
 {
-    private const string PromptText = "[ E ]  Pick up artifact";
-
     [Header("Settings")]
     public float interactRange = 4f;
+
+    private const KeyCode KeyboardInteract    = KeyCode.E;
+    private const KeyCode ControllerInteract  = KeyCode.JoystickButton0; // Xbox A
 
     private Transform player;
     private bool isInRange  = false;
@@ -18,6 +19,16 @@ public class ArtifactInteraction : MonoBehaviour
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
             player = playerObj.transform;
+
+        // Subscribe to device-change events so the prompt updates instantly on switch
+        if (InputDeviceTracker.Instance != null)
+            InputDeviceTracker.Instance.OnDeviceChanged += OnDeviceChanged;
+    }
+
+    private void OnDestroy()
+    {
+        if (InputDeviceTracker.Instance != null)
+            InputDeviceTracker.Instance.OnDeviceChanged -= OnDeviceChanged;
     }
 
     private void Update()
@@ -34,7 +45,6 @@ public class ArtifactInteraction : MonoBehaviour
         if (inRange && !isInRange)
         {
             isInRange = true;
-            if (Hud != null) Hud.ShowInteractionPrompt(PromptText);
         }
         else if (!inRange && isInRange)
         {
@@ -42,8 +52,27 @@ public class ArtifactInteraction : MonoBehaviour
             if (Hud != null) Hud.HideInteractionPrompt();
         }
 
-        if (isInRange && Input.GetKeyDown(KeyCode.E))
+        // Re-read device flag every frame while in range — guarantees the prompt
+        // is always correct regardless of when device detection settles
+        if (isInRange) UpdatePrompt();
+
+        if (isInRange && (Input.GetKeyDown(KeyboardInteract) || Input.GetKeyDown(ControllerInteract)))
             PickUp();
+    }
+
+    /// <summary>Called by InputDeviceTracker when the active device changes — refreshes prompt if in range.</summary>
+    private void OnDeviceChanged(bool isController)
+    {
+        if (isInRange) UpdatePrompt();
+    }
+
+    /// <summary>Shows the correct prompt based on the active input device.</summary>
+    private void UpdatePrompt()
+    {
+        if (Hud == null) return;
+        bool isController = InputDeviceTracker.Instance != null && InputDeviceTracker.Instance.IsUsingController;
+        string key = isController ? "[ A ]" : "[ E ]";
+        Hud.ShowInteractionPrompt($"{key}  Pick up artifact");
     }
 
     /// <summary>Picks up the artifact and triggers the win screen.</summary>

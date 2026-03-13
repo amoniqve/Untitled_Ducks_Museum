@@ -117,7 +117,8 @@ public class HUDController : MonoBehaviour
 
     private void UpdateStamina()
     {
-        isSprinting = Input.GetKey(KeyCode.LeftShift);
+        // LeftShift = keyboard sprint; joystick button 4 = Xbox LB
+        isSprinting = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.JoystickButton4);
 
         if (isSprinting && currentStamina > 0f)
             currentStamina -= staminaDrainRate * Time.deltaTime;
