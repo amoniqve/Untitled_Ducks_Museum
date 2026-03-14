@@ -8,7 +8,7 @@ public class GuardAnimation : MonoBehaviour
 	
 	void Start()
     {
-        rAnimator = GetComponent<Animator>();
+        rAnimator = transform.parent.GetComponent<Animator>();
     }
 
     void OnTriggerEnter(Collider other)
@@ -19,12 +19,7 @@ public class GuardAnimation : MonoBehaviour
 			if(other.CompareTag("Player"))
 			{
 				rAnimator.SetTrigger("Detection");
-			}
-			
-			// CURRENTLY USELESS CODE nothing is using the startChase trigger
-			if(other.CompareTag("Player"))
-			{
-				rAnimator.SetTrigger("startChase");
+				rAnimator.SetFloat("speedMultiplier", 0.75f);
 			}
 		}
     }

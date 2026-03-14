@@ -235,7 +235,7 @@ public class GuardAI : MonoBehaviour
         }
     }
 
-    bool CanSeePlayer()
+    public bool CanSeePlayer()
     {
         if (player == null) return false;
 
@@ -256,7 +256,7 @@ public class GuardAI : MonoBehaviour
         return true;
     }
 
-    bool IsPlayerInSafeZone()
+    public bool IsPlayerInSafeZone()
     {
         if (player == null) return false;
 
