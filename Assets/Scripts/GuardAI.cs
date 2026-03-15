@@ -34,10 +34,6 @@ public class GuardAI : MonoBehaviour
     public float viewAngle = 90f;
     public LayerMask obstacleMask;
 
-    [Header("Ghost Hover Animation")]
-    public float hoverHeight = 0.5f;
-    public float bobSpeed = 2f;
-    public float bobAmount = 0.3f;
     private float startY;
 
     [Header("Safe Zone Settings")]
@@ -89,10 +85,6 @@ public class GuardAI : MonoBehaviour
 
         UpdateDetectionMeter();
 
-        // hover animation
-        Vector3 pos = transform.position;
-        pos.y = startY + hoverHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
-        transform.position = pos;
     }
 
     // Triggered by WakeTrigger

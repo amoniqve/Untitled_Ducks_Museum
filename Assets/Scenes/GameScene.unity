@@ -3464,15 +3464,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalScale.x
-      value: -45.62759
+      value: -27.78341
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalScale.y
-      value: 632.4615
+      value: 385.1165
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1226.4204
+      value: 746.7881
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3480,11 +3480,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -5.2720127
+      value: -2.91
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 14.5
+      value: 8.4
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3f0ece553665f5b42b12f47662c48d69, type: 3}
       propertyPath: m_LocalRotation.w
@@ -10582,9 +10582,6 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
-  hoverHeight: 0.4
-  bobSpeed: 4
-  bobAmount: 0.3
   safeZoneTag: SafeZone
   patrolSpeed: 3.5
   chaseSpeed: 7
@@ -10607,7 +10604,7 @@ NavMeshAgent:
   m_AutoBraking: 1
   m_AutoRepath: 1
   m_Height: 1
-  m_BaseOffset: 2.75
+  m_BaseOffset: 2.1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!137 &574011803
