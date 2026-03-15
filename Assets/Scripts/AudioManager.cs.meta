@@ -3,7 +3,11 @@ guid: 42b0a7cdbb8e07d458d7e4b33f0fcce2
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - mainMenuMusic: {fileID: 8300000, guid: 39d1c9a3715001640888534c727cda50, type: 3}
+  - atmosphereMusic: {fileID: 8300000, guid: b3567c6ac7b31e741a1a89c2aa44fa4b, type: 3}
+  - victoryMusic: {fileID: 8300000, guid: fcc5457d2f6495a42a1e6ceac940182f, type: 3}
+  - gameOverMusic: {fileID: 8300000, guid: 87a039b9547455144a808e39cf50f85a, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

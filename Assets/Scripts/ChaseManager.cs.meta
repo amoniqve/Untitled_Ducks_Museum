@@ -3,7 +3,11 @@ guid: 72cdca2055094ea4eb778312330a51ec
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - lightsOutSound: {fileID: 8300000, guid: 1e9988dd586efa44a98cd89fd2579c01, type: 3}
+  - flickerSound: {fileID: 8300000, guid: 6a6f1d38e9cdc7f49bb81a5eddba2ce1, type: 3}
+  - lightOnSound: {fileID: 8300000, guid: 9495a93ebfa115c4eb24e0df40f1475f, type: 3}
+  - ghostChaseSound: {fileID: 8300000, guid: 0338b7808df67b44498709cff2b617e0, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
