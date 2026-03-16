@@ -12010,6 +12010,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1562262468056189379, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: walkSound
+      value: 
+      objectReference: {fileID: 8300000, guid: f05bf3d0ca0b85b4a827b081cd3fa933, type: 3}
+    - target: {fileID: 1562262468056189379, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: sprintStartSound
+      value: 
+      objectReference: {fileID: 8300000, guid: f3ec097b064727743b748597a676af2d, type: 3}
     - target: {fileID: 2153686048616989762, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
       propertyPath: m_Radius
       value: 1.39
