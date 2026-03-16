@@ -10570,21 +10570,21 @@ MonoBehaviour:
   - {fileID: 1408628281}
   - {fileID: 1533399742}
   startAsStatue: 1
-  wakeDelay: 3
+  wakeDelay: 4
   player: {fileID: 1922501560}
-  detectionRange: 20
-  chaseStopDistance: 20.06
+  detectionRange: 40
+  chaseStopDistance: 0
   detectionRaiseRate: 0.15
   detectionDecayRate: 0.08
   chaseDetectionRate: 0.35
-  viewDistance: 11.44
+  viewDistance: 30
   viewAngle: 119
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
   safeZoneTag: SafeZone
-  patrolSpeed: 3.5
-  chaseSpeed: 7
+  patrolSpeed: 7
+  chaseSpeed: 10
 --- !u!195 &574011802
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -12014,6 +12014,14 @@ PrefabInstance:
       propertyPath: walkSound
       value: 
       objectReference: {fileID: 8300000, guid: f05bf3d0ca0b85b4a827b081cd3fa933, type: 3}
+    - target: {fileID: 1562262468056189379, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: walkSpeed
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1562262468056189379, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
+      propertyPath: sprintSpeed
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 1562262468056189379, guid: 57b4ce6851e88684ab06b166186ccbe9, type: 3}
       propertyPath: sprintStartSound
       value: 
